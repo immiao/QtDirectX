@@ -14,7 +14,7 @@ TestQt::TestQt(QWidget *parent)
 	ui(new Ui::TestQtClass)
 {
 	ui->setupUi(this);
-	dxWidget = new DxWidget;
+	dxWidget = new DxWidget(0, this);
 	//dxWidget->show();
 	QHBoxLayout* layout = new QHBoxLayout;
 	layout->addWidget(dxWidget);

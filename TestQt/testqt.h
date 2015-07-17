@@ -9,7 +9,7 @@
 #include <d3dx10.h>
 
 #define MAXLINE 100
-
+class DxWidget;
 class TestQt : public QMainWindow
 {
 	Q_OBJECT
@@ -30,9 +30,8 @@ public:
 //	void Render();
 
 private:
-	int triggerId; // Used for ToolBar. -1 means untriggered. Id starts with 0 according to the QAction order on the ToolBar.
-	bool isDrawLineTriggered;
-	bool isChooseTriggered;
+	Ui::TestQtClass* ui;
+	int triggerId; // Used for ToolBar. -1 means untriggered. Id starts with 0 according to the QAction order on the ToolBar.s
 	DxWidget* dxWidget;
 	//D3D10_VIEWPORT vp;
 	//D3D10_DRIVER_TYPE       g_driverType;
@@ -46,11 +45,12 @@ private:
 	//DXGI_SWAP_CHAIN_DESC sd;
 	//SimpleVertex vertices[MAXLINE];
 public:
-	Ui::TestQtClass* ui;
+	bool isDrawLineTriggered;
+	bool isChooseTriggered;
 public slots:
 	void drawLineTriggered();
 	void chooseTriggered();
-		
+	
 };
 
 #endif // TESTQT_H

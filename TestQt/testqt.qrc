@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/TestQt">
-        <file>D:/QtResource/DrawLine.png</file>
-        <file>D:/QtResource/Choose.png</file>
+        <file>Choose.png</file>
+        <file>DrawLine.png</file>
     </qresource>
 </RCC>

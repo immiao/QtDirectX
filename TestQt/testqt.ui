@@ -62,7 +62,7 @@
    </property>
    <property name="icon">
     <iconset resource="testqt.qrc">
-     <normaloff>:/TestQt/D:/QtResource/DrawLine.png</normaloff>:/TestQt/D:/QtResource/DrawLine.png</iconset>
+     <normaloff>:/TestQt/DrawLine.png</normaloff>:/TestQt/DrawLine.png</iconset>
    </property>
    <property name="text">
     <string>画线</string>
@@ -74,7 +74,7 @@
    </property>
    <property name="icon">
     <iconset resource="testqt.qrc">
-     <normaloff>:/TestQt/D:/QtResource/Choose.png</normaloff>:/TestQt/D:/QtResource/Choose.png</iconset>
+     <normaloff>:/TestQt/Choose.png</normaloff>:/TestQt/Choose.png</iconset>
    </property>
    <property name="text">
     <string>选中</string>

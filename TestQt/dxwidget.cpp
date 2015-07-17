@@ -1,11 +1,13 @@
 #include "dxwidget.h"
+#include "testqt.h"
 #include <qdebug.h>
 #include <qdatetime.h>
+#include "qtimer.h"
 #include "qlabel.h"
 #include <QtWidgets\QDialog>
 #include <QMouseEvent>
 
-DxWidget::DxWidget(QWidget *parent)
+DxWidget::DxWidget(QWidget *parent, TestQt* mainWin)
 {
 	//QLabel* label = new QLabel(this);
 	//label->setText(QObject::tr("i am a label"));
@@ -15,6 +17,14 @@ DxWidget::DxWidget(QWidget *parent)
 	setAttribute(Qt::WA_NativeWindow, true);
 
 	InitDevice();
+
+	mVertexCounter = 0;
+	mMainWin = mainWin;
+	isDraggingLine = false;
+
+	QTimer *timer = new QTimer(this);
+	connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+	timer->start(20);
 }
 
 DxWidget::~DxWidget()
@@ -35,8 +45,7 @@ HRESULT DxWidget::InitDevice()
 	g_pVertexLayout = NULL;
 	g_pVertexBuffer = NULL;
 	g_pEffect = NULL;
-
-    HRESULT hr = S_OK;
+	hr = S_OK;
 
     UINT createDeviceFlags = 0;
 #ifdef _DEBUG
@@ -127,6 +136,7 @@ HRESULT DxWidget::InitDevice()
     D3D10_INPUT_ELEMENT_DESC layout[] =
     {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D10_INPUT_PER_VERTEX_DATA, 0 },
+		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D10_INPUT_PER_VERTEX_DATA, 0 },
     };
     UINT numElements = sizeof( layout ) / sizeof( layout[0] );
 
@@ -140,18 +150,16 @@ HRESULT DxWidget::InitDevice()
 
     // Set the input layout
     g_pd3dDevice->IASetInputLayout( g_pVertexLayout );
+	    // Set primitive topology
+    g_pd3dDevice->IASetPrimitiveTopology( D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
+    return S_OK;
+}
 
-    // Create vertex buffer
-    SimpleVertex vertices[] =
-    {
-        D3DXVECTOR3( 0.0f, 0.5f, 0.5f ),
-        D3DXVECTOR3( 0.5f, -10.0f, 0.5f ),
-        //D3DXVECTOR3( -0.5f, -0.5f, 0.5f ),
-    };
+HRESULT DxWidget::UpdateVertexBuffer()
+{
     D3D10_BUFFER_DESC bd;
     bd.Usage = D3D10_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof( vertices );
-	qDebug() <<  "SIZE:" << sizeof( SimpleVertex ) << endl;
+    bd.ByteWidth = sizeof( SimpleVertex ) * mVertexCounter;
     bd.BindFlags = D3D10_BIND_VERTEX_BUFFER;
     bd.CPUAccessFlags = 0;
     bd.MiscFlags = 0;
@@ -165,11 +173,6 @@ HRESULT DxWidget::InitDevice()
     UINT stride = sizeof( SimpleVertex );
     UINT offset = 0;
     g_pd3dDevice->IASetVertexBuffers( 0, 1, &g_pVertexBuffer, &stride, &offset );
-
-    // Set primitive topology
-    g_pd3dDevice->IASetPrimitiveTopology( D3D10_PRIMITIVE_TOPOLOGY_LINESTRIP );
-
-    return S_OK;
 }
 
 //--------------------------------------------------------------------------------------
@@ -178,7 +181,7 @@ HRESULT DxWidget::InitDevice()
 void DxWidget::Render()
 {
 	// Clear the back buffer 
-    float ClearColor[4] = { 0.0f, 0.125f, 0.3f, 1.0f }; // red,green,blue,alpha
+    float ClearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f }; // red,green,blue,alpha
     g_pd3dDevice->ClearRenderTargetView( g_pRenderTargetView, ClearColor );
 
     // Render a triangle
@@ -188,7 +191,7 @@ void DxWidget::Render()
     for( UINT p = 0; p < techDesc.Passes; ++p )
     {
         g_pTechnique->GetPassByIndex( p )->Apply( 0 );
-        g_pd3dDevice->Draw( 2, 0 );
+        g_pd3dDevice->Draw( mVertexCounter, 0 );
 		//qDebug() << "DONE";
     }
 
@@ -201,6 +204,7 @@ void DxWidget::resizeEvent(QResizeEvent* evt)
 	//releaseBuffers();
 	//g_pSwapChain->ResizeBuffers(1, width(), height(), sd.BufferDesc.Format, 0);
 	//g_pSwapChain->GetDesc(&sd);
+	UpdateVertexBuffer();
 	Render();
 	/*qDebug() << "resizeEvent Called";*/
 	//createBuffers();
@@ -208,9 +212,7 @@ void DxWidget::resizeEvent(QResizeEvent* evt)
 int counter=0;
 void DxWidget::paintEvent(QPaintEvent* evt)
 {
-	
-	Render();
-	Render();
+	UpdateVertexBuffer();
 	Render();
 	//qDebug() << "paintEvent Called" << counter++;
 	//QDateTime current_date_time = QDateTime::currentDateTime();
@@ -219,16 +221,104 @@ void DxWidget::paintEvent(QPaintEvent* evt)
 
 void DxWidget::mouseMoveEvent(QMouseEvent * event)
 {
-	//qDebug() << event->pos();
+	if (mMainWin->isDrawLineTriggered)
+	{
+		vertices[mVertexCounter - 1] = toSimpleVertex(event->pos());
+	}
+	else if (mMainWin->isChooseTriggered && isDraggingLine)
+	{
+		vertices[lineIndex].Pos.x += (event->pos().x() - startPoint.x()) / (float)width() * 2;
+		vertices[lineIndex].Pos.y += -(event->pos().y() - startPoint.y()) / (float)height() * 2;
+		vertices[lineIndex + 1].Pos.x += (event->pos().x() - startPoint.x()) / (float)width() * 2;
+		vertices[lineIndex + 1].Pos.y += -(event->pos().y() - startPoint.y()) / (float)height() * 2;
+		qDebug() << "StartX:" << startPoint.x();
+		qDebug() << "EndX:" << event->pos().x();
+		startPoint = event->pos();
+	}
+	UpdateVertexBuffer();
+	Render();
+	qDebug() << event->pos();
 }
 
 void DxWidget::mousePressEvent(QMouseEvent * event)
 {
-	//qDebug() << event->pos();
+	qDebug() << "MOUSE PRESS";
+	if (mMainWin->isDrawLineTriggered)
+	{
+		vertices[mVertexCounter] = toSimpleVertex(event->pos());
+		vertices[mVertexCounter].Color.x = 0.0f;
+		vertices[mVertexCounter].Color.y = 0.0f;
+		vertices[mVertexCounter].Color.z = 0.0f;
+		vertices[mVertexCounter + 1] = toSimpleVertex(event->pos());
+		vertices[mVertexCounter + 1].Color.x = 0.0f;
+		vertices[mVertexCounter + 1].Color.y = 0.0f;
+		vertices[mVertexCounter + 1].Color.z = 0.0f;
+		mVertexCounter += 2;
+	}
+	else if (mMainWin->isChooseTriggered)
+	{
+		for (int i = 0; i < mVertexCounter; i++)
+			vertices[i].Color.x = 0.0f;
+		for (int i = 0; i < mVertexCounter; i+=2)
+		{
+			QPoint p1 = toQPoint(vertices[i]);
+			QPoint p2 = toQPoint(vertices[i+1]);
+			QPoint p = event->pos();
+			qDebug() << p1;
+			qDebug() << "EQUATION=" << (p1.x() - p2.x()) * (p.y() - p1.y()) - (p.x() - p1.x()) * (p1.y() - p2.y());
+			int minx, maxx, miny, maxy;
+			if (p1.x() < p2.x())
+			{
+				minx = p1.x();
+				maxx = p2.x();
+			}
+			else
+			{
+				minx = p2.x();
+				maxx = p1.x();
+			}
+
+			if (p1.y() < p2.y())
+			{
+				miny = p1.y();
+				maxy = p2.y();
+			}
+			else
+			{
+				miny = p2.y();
+				maxy = p1.y();
+			}
+
+
+			if ( abs((p1.x() - p2.x()) * (p.y() - p1.y()) - (p.x() - p1.x()) * (p1.y() - p2.y())) < 2000
+				&& p.x() >= minx && p.x() <= maxx && p.y() >= miny && p.y() <= maxy)
+			{
+				isDraggingLine = true;
+				startPoint = event->pos();
+				lineIndex = i;
+				vertices[i].Color.x = 1.0f;
+				vertices[i + 1].Color.x = 1.0f;
+				break;
+			}
+
+		}
+	}
+
 }
 
 void DxWidget::mouseReleaseEvent(QMouseEvent* event)
 {
+	qDebug() << "MOUSE RELEASE";
+	if (mMainWin->isDrawLineTriggered)
+	{
+		vertices[mVertexCounter] = toSimpleVertex(event->pos());
+		//mVertexCounter++;
+	}
+	else if (mMainWin->isChooseTriggered)
+	{
+		isDraggingLine = false;
+	}
+
 	//qDebug() << event->pos();
 }
 
@@ -246,3 +336,23 @@ void DxWidget::CleanupDevice()
     if( g_pSwapChain ) g_pSwapChain->Release();
     if( g_pd3dDevice ) g_pd3dDevice->Release();
 }
+
+SimpleVertex DxWidget::toSimpleVertex(const QPoint &point)
+{
+	SimpleVertex result;
+	D3DXVECTOR3 vector3;
+	vector3.x = point.x() / (float)width() * 2 - 1;
+	vector3.y = -(point.y() / (float)height() * 2 - 1); // reverse
+	vector3.z = 0.5f;
+	result.Pos = vector3;
+	return result;
+}
+
+QPoint DxWidget::toQPoint(const SimpleVertex &vertex)
+{
+	QPoint result;
+	result.setX((vertex.Pos.x + 1)/2 * width());
+	result.setY((-vertex.Pos.y + 1)/2 * height());
+	return result;
+}
+

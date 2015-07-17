@@ -2,6 +2,7 @@
 #define DXWIDGET_H
 
 #include "ui_testqt.h"
+#include "testqt.h"
 #include <qwidget.h>
 #include <d3d10.h>
 #include <d3dx10.h>
@@ -12,14 +13,22 @@ struct SimpleVertex
 {
     D3DXVECTOR3 Pos;
     D3DXVECTOR4 Color;
-};
+	SimpleVertex()
+	{
+		Color.x = 0.0f;
+		Color.y = 0.0f;
+		Color.z = 0.0f;
+		Color.w = 1.0f;
+	}
 
+};
+class TestQt;
 class DxWidget : public QWidget
 {
 	Q_OBJECT
 	// Q_DISABLE_COPY(d3DRenderWidget)
 public:
-	DxWidget(QWidget *parent = 0);
+	DxWidget(QWidget *parent = 0, TestQt* mainWin = 0);
 	~DxWidget();
 	
 	virtual QPaintEngine* paintEngine() const { return NULL; } // override
@@ -34,6 +43,9 @@ protected:
 	void Render();
 
 private:
+	HRESULT UpdateVertexBuffer();
+	SimpleVertex toSimpleVertex(const QPoint &point);
+	QPoint toQPoint(const SimpleVertex &vertex);
 	D3D10_VIEWPORT vp;
 	D3D10_DRIVER_TYPE       g_driverType;
 	ID3D10Device*           g_pd3dDevice;
@@ -45,6 +57,15 @@ private:
 	ID3D10Effect*           g_pEffect;
 	DXGI_SWAP_CHAIN_DESC sd;
 	SimpleVertex vertices[MAXLINE];		
+	int mVertexCounter;
+	HRESULT hr;
+
+	// variables for dragging line
+	bool isDraggingLine;
+	QPoint startPoint;
+	int lineIndex;
+
+	TestQt* mMainWin;
 };
 
 #endif // DXWIDGET_H
