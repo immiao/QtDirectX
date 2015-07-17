@@ -1,0 +1,18 @@
+﻿生成启动时间为 2015/7/17 11:02:17。
+     1>项目“C:\Users\kingsoft\documents\visual studio 2012\Projects\TestQt\TestQt\TestQt.vcxproj”在节点 2 上(Build 个目标)。
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /I.\GeneratedFiles /I. /IC:\Qt\Qt5.2.1\5.2.1\msvc2012\include /I.\GeneratedFiles\Debug /IC:\Qt\Qt5.2.1\5.2.1\msvc2012\include\QtCore /IC:\Qt\Qt5.2.1\5.2.1\msvc2012\include\QtGui /IC:\Qt\Qt5.2.1\5.2.1\msvc2012\include\QtWidgets /Zi /nologo /W1 /WX- /Od /Oy- /D UNICODE /D WIN32 /D WIN64 /D QT_DLL /D QT_CORE_LIB /D QT_GUI_LIB /D QT_WIDGETS_LIB /Gm- /EHsc /MDd /GS /fp:precise /Zc:wchar_t- /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt dxwidget.cpp
+         dxwidget.cpp
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\kingsoft\documents\visual studio 2012\Projects\TestQt\Win32\Debug\\TestQt.exe" /NOLOGO /LIBPATH:C:\Qt\Qt5.2.1\5.2.1\msvc2012\lib qtmaind.lib Qt5Cored.lib Qt5Guid.lib Qt5Widgetsd.lib d3d10.lib d3dx10d.lib D3DCompiler.lib dxerr.lib dxgi.lib dxguid.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\kingsoft\documents\visual studio 2012\Projects\TestQt\Win32\Debug\TestQt.pdb" /SUBSYSTEM:WINDOWS /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\kingsoft\documents\visual studio 2012\Projects\TestQt\Win32\Debug\TestQt.lib" /MACHINE:X86 /SAFESEH Debug\dxwidget.obj
+         Debug\moc_dxwidget.obj
+         Debug\moc_testqt.obj
+         Debug\qrc_testqt.obj
+         Debug\main.obj
+         Debug\testqt.obj
+         TestQt.vcxproj -> C:\Users\kingsoft\documents\visual studio 2012\Projects\TestQt\Win32\Debug\TestQt.exe
+     1>已完成生成项目“C:\Users\kingsoft\documents\visual studio 2012\Projects\TestQt\TestQt\TestQt.vcxproj”(Build 个目标)的操作。
+
+生成成功。
+
+已用时间 00:00:02.09
