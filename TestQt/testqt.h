@@ -1,56 +1,42 @@
+///////////////////////////////////////////////////////////////
+// Copyright(c) Kingsoft
+// 
+// FileName : testqt.h
+// Creator  : Miao Kaixiang
+// Date     : 2015-7-17 15:00:00
+// Comment  : Declaration of QtMainWindow
+//
+///////////////////////////////////////////////////////////////
+
 #ifndef TESTQT_H
 #define TESTQT_H
 
-#include <QtWidgets/QMainWindow>
 #include "ui_testqt.h"
 #include "dxwidget.h"
-#include <qwidget.h>
+#include <QtWidgets/QMainWindow>
+#include <QWidget>
 #include <d3d10.h>
 #include <d3dx10.h>
 
-#define MAXLINE 100
 class DxWidget;
 class TestQt : public QMainWindow
 {
 	Q_OBJECT
-	// Q_DISABLE_COPY(d3DRenderWidget)
+
 public:
 	TestQt(QWidget *parent = 0);
 	~TestQt();
-	
-	//virtual QPaintEngine* paintEngine() const { return NULL; } // override
-//protected:
-//	virtual void resizeEvent(QResizeEvent* evt);
-//	virtual void paintEvent(QPaintEvent* evt);
-//	virtual void mouseMoveEvent(QMouseEvent* event);
-//	virtual void mousePressEvent(QMouseEvent* event);
-//	virtual void mouseReleaseEvent(QMouseEvent* event);
-//	void CleanupDevice();
-//	HRESULT InitDevice();
-//	void Render();
+	HRESULT Init();
+	bool m_bIsDrawLineTriggered;
+	bool m_bIsChooseTriggered;
 
 private:
-	Ui::TestQtClass* ui;
-	int triggerId; // Used for ToolBar. -1 means untriggered. Id starts with 0 according to the QAction order on the ToolBar.s
-	DxWidget* dxWidget;
-	//D3D10_VIEWPORT vp;
-	//D3D10_DRIVER_TYPE       g_driverType;
-	//ID3D10Device*           g_pd3dDevice;
-	//IDXGISwapChain*         g_pSwapChain;
-	//ID3D10RenderTargetView* g_pRenderTargetView;
-	//ID3D10EffectTechnique*  g_pTechnique;
-	//ID3D10InputLayout*      g_pVertexLayout;
-	//ID3D10Buffer*           g_pVertexBuffer;
-	//ID3D10Effect*           g_pEffect;
-	//DXGI_SWAP_CHAIN_DESC sd;
-	//SimpleVertex vertices[MAXLINE];
-public:
-	bool isDrawLineTriggered;
-	bool isChooseTriggered;
+	Ui::TestQtClass* m_ui;
+	DxWidget* m_dxWidget;
+
 public slots:
-	void drawLineTriggered();
-	void chooseTriggered();
-	
+	void DrawLineTriggered();
+	void ChooseTriggered();
 };
 
 #endif // TESTQT_H

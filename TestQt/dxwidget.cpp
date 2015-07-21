@@ -1,26 +1,30 @@
-#include "dxwidget.h"
-#include "testqt.h"
-#include <qdebug.h>
-#include <qdatetime.h>
-#include "qtimer.h"
-#include "qlabel.h"
-#include <QtWidgets\QDialog>
-#include <QMouseEvent>
+///////////////////////////////////////////////////////////////
+// Copyright(c) Kingsoft
+// 
+// FileName : dxwidget.cpp
+// Creator  : Miao Kaixiang
+// Date     : 2015-7-17 15:00:00
+// Comment  : Implementation of DirectX Widget
+//
+///////////////////////////////////////////////////////////////
 
-DxWidget::DxWidget(QWidget *parent, TestQt* mainWin)
+#include "dxwidget.h"
+#include "KEPublic2.h"
+#include <QMouseEvent>
+#include <QTimer>
+#include <QDialog>
+#include <QLabel>
+
+DxWidget::DxWidget(TestQt* mainWin)
 {
-	//QLabel* label = new QLabel(this);
-	//label->setText(QObject::tr("i am a label"));
-	//label->resize(250,20);
-	//label->show();
 	setAttribute(Qt::WA_PaintOnScreen, true);
 	setAttribute(Qt::WA_NativeWindow, true);
 
 	InitDevice();
 
-	mVertexCounter = 0;
-	mMainWin = mainWin;
-	isDraggingLine = false;
+	m_nVertexCounter = 0;
+	m_pMainWin = mainWin;
+	m_bIsDraggingLine = false;
 
 	QTimer *timer = new QTimer(this);
 	connect(timer, SIGNAL(timeout()), this, SLOT(update()));
@@ -32,241 +36,222 @@ DxWidget::~DxWidget()
 	CleanupDevice();
 }
 
-//--------------------------------------------------------------------------------------
 // Create Direct3D device and swap chain
-//--------------------------------------------------------------------------------------
 HRESULT DxWidget::InitDevice()
 {
-	g_driverType = D3D10_DRIVER_TYPE_NULL;
-	g_pd3dDevice = NULL;
-	g_pSwapChain = NULL;
-	g_pRenderTargetView = NULL;
-	g_pTechnique = NULL;
-	g_pVertexLayout = NULL;
-	g_pVertexBuffer = NULL;
-	g_pEffect = NULL;
-	hr = S_OK;
+	HRESULT hResult = E_FAIL;
+	m_driverType = D3D10_DRIVER_TYPE_NULL;
+	m_pd3dDevice = NULL;
+	m_pSwapChain = NULL;
+	m_pRenderTargetView = NULL;
+	m_pTechnique = NULL;
+	m_pVertexLayout = NULL;
+	m_pVertexBuffer = NULL;
+	m_pEffect = NULL;
 
     UINT createDeviceFlags = 0;
-#ifdef _DEBUG
-    createDeviceFlags |= D3D10_CREATE_DEVICE_DEBUG;
-#endif
 
     D3D10_DRIVER_TYPE driverTypes[] =
     {
         D3D10_DRIVER_TYPE_HARDWARE,
         D3D10_DRIVER_TYPE_REFERENCE,
     };
-    UINT numDriverTypes = sizeof( driverTypes ) / sizeof( driverTypes[0] );
+    UINT numDriverTypes = sizeof(driverTypes) / sizeof(driverTypes[0]);
 
-    ZeroMemory( &sd, sizeof( sd ) );
-    sd.BufferCount = 1;
-	//qDebug() << "HHHH " << width();
-	sd.BufferDesc.Width = width();
-    sd.BufferDesc.Height = height();
-
-    //sd.BufferDesc.Width = width();
-    //sd.BufferDesc.Height = height();
-    sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    sd.BufferDesc.RefreshRate.Numerator = 60;
-    sd.BufferDesc.RefreshRate.Denominator = 1;
-    sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    sd.OutputWindow = (HWND)winId();
-	/*sd.OutputWindow = (HWND)winId();*/
-    sd.SampleDesc.Count = 1;
-    sd.SampleDesc.Quality = 0;
-    sd.Windowed = TRUE;
+    ZeroMemory(&m_swapChainDesc, sizeof(m_swapChainDesc));
+    m_swapChainDesc.BufferCount = 1;
+	m_swapChainDesc.BufferDesc.Width = width();
+    m_swapChainDesc.BufferDesc.Height = height();
+    m_swapChainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    m_swapChainDesc.BufferDesc.RefreshRate.Numerator = 60;
+    m_swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
+    m_swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    m_swapChainDesc.OutputWindow = (HWND)winId();
+    m_swapChainDesc.SampleDesc.Count = 1;
+    m_swapChainDesc.SampleDesc.Quality = 0;
+    m_swapChainDesc.Windowed = TRUE;
 	
-    for( UINT driverTypeIndex = 0; driverTypeIndex < numDriverTypes; driverTypeIndex++ )
+    for(UINT driverTypeIndex = 0; driverTypeIndex < numDriverTypes; driverTypeIndex++)
     {
-        g_driverType = driverTypes[driverTypeIndex];
-        hr = D3D10CreateDeviceAndSwapChain( NULL, g_driverType, NULL, createDeviceFlags,
-                                            D3D10_SDK_VERSION, &sd, &g_pSwapChain, &g_pd3dDevice );
-        if( SUCCEEDED( hr ) )
+        m_driverType = driverTypes[driverTypeIndex];
+        hResult = D3D10CreateDeviceAndSwapChain(NULL, m_driverType, NULL, createDeviceFlags,
+			D3D10_SDK_VERSION, &m_swapChainDesc, &m_pSwapChain, &m_pd3dDevice);
+
+        if(SUCCEEDED(hResult))
             break;
     }
-    if( FAILED( hr ) )
-        return hr;
+	KE_COM_PROCESS_ERROR(hResult);
+	KE_PROCESS_ERROR(m_pSwapChain);
+	KE_PROCESS_ERROR(m_pd3dDevice);
 
     // Create a render target view
     ID3D10Texture2D* pBackBuffer;
-    hr = g_pSwapChain->GetBuffer( 0, __uuidof( ID3D10Texture2D ), ( LPVOID* )&pBackBuffer );
-    if( FAILED( hr ) )
-        return hr;
+    hResult = m_pSwapChain->GetBuffer(0, __uuidof( ID3D10Texture2D ), ( LPVOID* )&pBackBuffer);
+	KE_COM_PROCESS_ERROR(hResult);
+	KE_PROCESS_ERROR(pBackBuffer);
 
-    hr = g_pd3dDevice->CreateRenderTargetView( pBackBuffer, NULL, &g_pRenderTargetView );
+    hResult = m_pd3dDevice->CreateRenderTargetView(pBackBuffer, NULL, &m_pRenderTargetView);
     pBackBuffer->Release();
-    if( FAILED( hr ) )
-        return hr;
+	KE_COM_PROCESS_ERROR(hResult);
+	KE_PROCESS_ERROR(m_pRenderTargetView);
 	
-    g_pd3dDevice->OMSetRenderTargets( 1, &g_pRenderTargetView, NULL );
+    m_pd3dDevice->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
 
     // Setup the viewport
-    vp.Width = width();
-    vp.Height = height();
-    vp.MinDepth = 0.0f;
-    vp.MaxDepth = 1.0f;
-    vp.TopLeftX = 0;
-    vp.TopLeftY = 0;
-    g_pd3dDevice->RSSetViewports( 1, &vp );
+    m_viewPort.Width = width();
+    m_viewPort.Height = height();
+    m_viewPort.MinDepth = 0.0f;
+    m_viewPort.MaxDepth = 1.0f;
+    m_viewPort.TopLeftX = 0;
+    m_viewPort.TopLeftY = 0;
+    m_pd3dDevice->RSSetViewports(1, &m_viewPort);
 
-	// Add at 2015/7/16 17:57
 	 // Create the effect
     DWORD dwShaderFlags = D3D10_SHADER_ENABLE_STRICTNESS;
-#if defined( DEBUG ) || defined( _DEBUG )
-    // Set the D3D10_SHADER_DEBUG flag to embed debug information in the shaders.
-    // Setting this flag improves the shader debugging experience, but still allows 
-    // the shaders to be optimized and to run exactly the way they will run in 
-    // the release configuration of this program.
-    dwShaderFlags |= D3D10_SHADER_DEBUG;
-    #endif
-    hr = D3DX10CreateEffectFromFile( L"testqt.fx", NULL, NULL, "fx_4_0", dwShaderFlags, 0,
-                                         g_pd3dDevice, NULL, NULL, &g_pEffect, NULL, NULL );
-    if( FAILED( hr ) )
-    {
-        MessageBox( NULL,
-                    L"The FX file cannot be located.  Please run this executable from the directory that contains the FX file.", L"Error", MB_OK );
-        return hr;
-    }
+
+    hResult = D3DX10CreateEffectFromFile(L"testqt.fx", NULL, NULL, "fx_4_0", dwShaderFlags, 0,
+		m_pd3dDevice, NULL, NULL, &m_pEffect, NULL, NULL );
+	KE_COM_PROCESS_ERROR(hResult);
+	KE_PROCESS_ERROR(m_pEffect);
 
     // Obtain the technique
-    g_pTechnique = g_pEffect->GetTechniqueByName( "Render" );
+    m_pTechnique = m_pEffect->GetTechniqueByName("Render");
 
     // Define the input layout
     D3D10_INPUT_ELEMENT_DESC layout[] =
     {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D10_INPUT_PER_VERTEX_DATA, 0 },
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D10_INPUT_PER_VERTEX_DATA, 0},
+		{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D10_INPUT_PER_VERTEX_DATA, 0},
     };
-    UINT numElements = sizeof( layout ) / sizeof( layout[0] );
+    UINT numElements = sizeof(layout) / sizeof(layout[0]);
 
     // Create the input layout
     D3D10_PASS_DESC PassDesc;
-    g_pTechnique->GetPassByIndex( 0 )->GetDesc( &PassDesc );
-    hr = g_pd3dDevice->CreateInputLayout( layout, numElements, PassDesc.pIAInputSignature,
-                                          PassDesc.IAInputSignatureSize, &g_pVertexLayout );
-    if( FAILED( hr ) )
-        return hr;
+    m_pTechnique->GetPassByIndex(0)->GetDesc(&PassDesc);
+    hResult = m_pd3dDevice->CreateInputLayout(layout, numElements, PassDesc.pIAInputSignature,
+		PassDesc.IAInputSignatureSize, &m_pVertexLayout );
+    KE_COM_PROCESS_ERROR(hResult);
+	KE_PROCESS_ERROR(m_pVertexLayout);
 
     // Set the input layout
-    g_pd3dDevice->IASetInputLayout( g_pVertexLayout );
-	    // Set primitive topology
-    g_pd3dDevice->IASetPrimitiveTopology( D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
-    return S_OK;
+    m_pd3dDevice->IASetInputLayout(m_pVertexLayout);
+	// Set primitive topology
+    m_pd3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
+
+	hResult = S_OK;
+Exit0:
+	return hResult;
 }
 
 HRESULT DxWidget::UpdateVertexBuffer()
 {
+	HRESULT hResult = E_FAIL;
     D3D10_BUFFER_DESC bd;
     bd.Usage = D3D10_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof( SimpleVertex ) * mVertexCounter;
+    bd.ByteWidth = sizeof(SIMPLE_VERTEX) * m_nVertexCounter;
     bd.BindFlags = D3D10_BIND_VERTEX_BUFFER;
     bd.CPUAccessFlags = 0;
     bd.MiscFlags = 0;
     D3D10_SUBRESOURCE_DATA InitData;
-    InitData.pSysMem = vertices;
-    hr = g_pd3dDevice->CreateBuffer( &bd, &InitData, &g_pVertexBuffer );
-    if( FAILED( hr ) )
-        return hr;
+    InitData.pSysMem = m_vertices;
+    hResult = m_pd3dDevice->CreateBuffer(&bd, &InitData, &m_pVertexBuffer);
+	KE_COM_PROCESS_ERROR(hResult);
+	KE_PROCESS_ERROR(m_pVertexBuffer);
 
     // Set vertex buffer
-    UINT stride = sizeof( SimpleVertex );
+    UINT stride = sizeof(SIMPLE_VERTEX);
     UINT offset = 0;
-    g_pd3dDevice->IASetVertexBuffers( 0, 1, &g_pVertexBuffer, &stride, &offset );
+    m_pd3dDevice->IASetVertexBuffers(0, 1, &m_pVertexBuffer, &stride, &offset);
+
+	hResult = S_OK;
+Exit0:
+	return hResult;
 }
 
-//--------------------------------------------------------------------------------------
 // Render the frame
-//--------------------------------------------------------------------------------------
 void DxWidget::Render()
 {
-	// Clear the back buffer 
-    float ClearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f }; // red,green,blue,alpha
-    g_pd3dDevice->ClearRenderTargetView( g_pRenderTargetView, ClearColor );
-
-    // Render a triangle
+    float ClearColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+    m_pd3dDevice->ClearRenderTargetView(m_pRenderTargetView, ClearColor);
     D3D10_TECHNIQUE_DESC techDesc;
-    g_pTechnique->GetDesc( &techDesc );
-	//qDebug() << techDesc.Passes;
-    for( UINT p = 0; p < techDesc.Passes; ++p )
+    m_pTechnique->GetDesc(&techDesc);
+    for(UINT p = 0; p < techDesc.Passes; ++p)
     {
-        g_pTechnique->GetPassByIndex( p )->Apply( 0 );
-        g_pd3dDevice->Draw( mVertexCounter, 0 );
-		//qDebug() << "DONE";
+        m_pTechnique->GetPassByIndex(p)->Apply(0);
+        m_pd3dDevice->Draw(m_nVertexCounter, 0);
     }
-
-    // Present the information rendered to the back buffer to the front buffer (the screen)
-    g_pSwapChain->Present( 0, 0 );
+    m_pSwapChain->Present(0, 0);
 }
 
 void DxWidget::resizeEvent(QResizeEvent* evt)
 {
-	//releaseBuffers();
-	//g_pSwapChain->ResizeBuffers(1, width(), height(), sd.BufferDesc.Format, 0);
-	//g_pSwapChain->GetDesc(&sd);
-	UpdateVertexBuffer();
-	Render();
-	/*qDebug() << "resizeEvent Called";*/
-	//createBuffers();
+	if (m_nVertexCounter != 0)
+	{
+		UpdateVertexBuffer();
+		Render();
+	}
 }
-int counter=0;
+
 void DxWidget::paintEvent(QPaintEvent* evt)
 {
-	UpdateVertexBuffer();
-	Render();
-	//qDebug() << "paintEvent Called" << counter++;
-	//QDateTime current_date_time = QDateTime::currentDateTime();
-	//qDebug() << current_date_time;
+	if (m_nVertexCounter != 0)
+	{
+		UpdateVertexBuffer();
+		Render();
+	}
 }
 
-void DxWidget::mouseMoveEvent(QMouseEvent * event)
+void DxWidget::mouseMoveEvent(QMouseEvent* event)
 {
-	if (mMainWin->isDrawLineTriggered)
+	if (m_pMainWin->m_bIsDrawLineTriggered)
 	{
-		vertices[mVertexCounter - 1] = toSimpleVertex(event->pos());
+		m_vertices[m_nVertexCounter - 1].Pos = ToSimpleVertex(event->pos());
 	}
-	else if (mMainWin->isChooseTriggered && isDraggingLine)
+	else if (m_pMainWin->m_bIsChooseTriggered && m_bIsDraggingLine)
 	{
-		vertices[lineIndex].Pos.x += (event->pos().x() - startPoint.x()) / (float)width() * 2;
-		vertices[lineIndex].Pos.y += -(event->pos().y() - startPoint.y()) / (float)height() * 2;
-		vertices[lineIndex + 1].Pos.x += (event->pos().x() - startPoint.x()) / (float)width() * 2;
-		vertices[lineIndex + 1].Pos.y += -(event->pos().y() - startPoint.y()) / (float)height() * 2;
-		qDebug() << "StartX:" << startPoint.x();
-		qDebug() << "EndX:" << event->pos().x();
-		startPoint = event->pos();
+		m_vertices[m_nLineIndex].Pos.x += (event->pos().x() - m_qStartPoint.x()) / (float)width() * 2;
+		m_vertices[m_nLineIndex].Pos.y += -(event->pos().y() - m_qStartPoint.y()) / (float)height() * 2;
+		m_vertices[m_nLineIndex + 1].Pos.x += (event->pos().x() - m_qStartPoint.x()) / (float)width() * 2;
+		m_vertices[m_nLineIndex + 1].Pos.y += -(event->pos().y() - m_qStartPoint.y()) / (float)height() * 2;
+		m_qStartPoint = event->pos();
 	}
-	UpdateVertexBuffer();
-	Render();
-	qDebug() << event->pos();
 }
 
-void DxWidget::mousePressEvent(QMouseEvent * event)
+void DxWidget::mousePressEvent(QMouseEvent* event)
 {
-	qDebug() << "MOUSE PRESS";
-	if (mMainWin->isDrawLineTriggered)
+	if (m_pMainWin->m_bIsDrawLineTriggered)
 	{
-		vertices[mVertexCounter] = toSimpleVertex(event->pos());
-		vertices[mVertexCounter].Color.x = 0.0f;
-		vertices[mVertexCounter].Color.y = 0.0f;
-		vertices[mVertexCounter].Color.z = 0.0f;
-		vertices[mVertexCounter + 1] = toSimpleVertex(event->pos());
-		vertices[mVertexCounter + 1].Color.x = 0.0f;
-		vertices[mVertexCounter + 1].Color.y = 0.0f;
-		vertices[mVertexCounter + 1].Color.z = 0.0f;
-		mVertexCounter += 2;
+		m_vertices[m_nVertexCounter].Pos = ToSimpleVertex(event->pos());
+		m_vertices[m_nVertexCounter].Color.x = 0.0f;
+		m_vertices[m_nVertexCounter].Color.y = 0.0f;
+		m_vertices[m_nVertexCounter].Color.z = 0.0f;
+		m_vertices[m_nVertexCounter].Color.w = 1.0f;
+		m_vertices[m_nVertexCounter + 1].Pos = ToSimpleVertex(event->pos());
+		m_vertices[m_nVertexCounter + 1].Color.x = 0.0f;
+		m_vertices[m_nVertexCounter + 1].Color.y = 0.0f;
+		m_vertices[m_nVertexCounter + 1].Color.z = 0.0f;
+		m_vertices[m_nVertexCounter + 1].Color.w = 1.0f;
+		m_nVertexCounter += 2;
 	}
-	else if (mMainWin->isChooseTriggered)
+	else if (m_pMainWin->m_bIsChooseTriggered)
 	{
-		for (int i = 0; i < mVertexCounter; i++)
-			vertices[i].Color.x = 0.0f;
-		for (int i = 0; i < mVertexCounter; i+=2)
+		for (int i = 0; i < m_nVertexCounter; i++)
 		{
-			QPoint p1 = toQPoint(vertices[i]);
-			QPoint p2 = toQPoint(vertices[i+1]);
+			m_vertices[i].Color.x = 0.0f;
+			m_vertices[i].Color.y = 0.0f;
+			m_vertices[i].Color.z = 0.0f;
+		}
+		// search for the line which is selected
+		for (int i = 0; i < m_nVertexCounter; i+=2)
+		{
+			QPoint p1 = ToQPoint(m_vertices[i].Pos);
+			QPoint p2 = ToQPoint(m_vertices[i+1].Pos);
 			QPoint p = event->pos();
-			qDebug() << p1;
-			qDebug() << "EQUATION=" << (p1.x() - p2.x()) * (p.y() - p1.y()) - (p.x() - p1.x()) * (p1.y() - p2.y());
-			int minx, maxx, miny, maxy;
+
+			int minx;
+			int maxx;
+			int miny;
+			int maxy;
 			if (p1.x() < p2.x())
 			{
 				minx = p1.x();
@@ -289,70 +274,60 @@ void DxWidget::mousePressEvent(QMouseEvent * event)
 				maxy = p1.y();
 			}
 
-
 			if ( abs((p1.x() - p2.x()) * (p.y() - p1.y()) - (p.x() - p1.x()) * (p1.y() - p2.y())) < 2000
 				&& p.x() >= minx && p.x() <= maxx && p.y() >= miny && p.y() <= maxy)
 			{
-				isDraggingLine = true;
-				startPoint = event->pos();
-				lineIndex = i;
-				vertices[i].Color.x = 1.0f;
-				vertices[i + 1].Color.x = 1.0f;
+				m_bIsDraggingLine = true;
+				m_qStartPoint = event->pos();
+				m_nLineIndex = i;
+				m_vertices[i].Color.x = 1.0f;
+				m_vertices[i + 1].Color.x = 1.0f;
 				break;
 			}
-
 		}
 	}
-
 }
 
 void DxWidget::mouseReleaseEvent(QMouseEvent* event)
 {
-	qDebug() << "MOUSE RELEASE";
-	if (mMainWin->isDrawLineTriggered)
+	if (m_pMainWin->m_bIsDrawLineTriggered)
 	{
-		vertices[mVertexCounter] = toSimpleVertex(event->pos());
-		//mVertexCounter++;
+		m_vertices[m_nVertexCounter].Pos = ToSimpleVertex(event->pos());
 	}
-	else if (mMainWin->isChooseTriggered)
+	else if (m_pMainWin->m_bIsChooseTriggered)
 	{
-		isDraggingLine = false;
+		m_bIsDraggingLine = false;
 	}
-
-	//qDebug() << event->pos();
 }
 
-//--------------------------------------------------------------------------------------
-// Clean up the objects we've created
-//--------------------------------------------------------------------------------------
+// Release the device
 void DxWidget::CleanupDevice()
 {
-    if( g_pd3dDevice ) g_pd3dDevice->ClearState();
-
-    if( g_pVertexBuffer ) g_pVertexBuffer->Release();
-    if( g_pVertexLayout ) g_pVertexLayout->Release();
-    if( g_pEffect ) g_pEffect->Release();
-    if( g_pRenderTargetView ) g_pRenderTargetView->Release();
-    if( g_pSwapChain ) g_pSwapChain->Release();
-    if( g_pd3dDevice ) g_pd3dDevice->Release();
+    if( m_pd3dDevice ) m_pd3dDevice->ClearState();
+    if( m_pVertexBuffer ) m_pVertexBuffer->Release();
+    if( m_pVertexLayout ) m_pVertexLayout->Release();
+    if( m_pEffect ) m_pEffect->Release();
+    if( m_pRenderTargetView ) m_pRenderTargetView->Release();
+    if( m_pSwapChain ) m_pSwapChain->Release();
+    if( m_pd3dDevice ) m_pd3dDevice->Release();
 }
 
-SimpleVertex DxWidget::toSimpleVertex(const QPoint &point)
+// convert QPoint to the range in [-1, 1]
+D3DXVECTOR3 DxWidget::ToSimpleVertex(const QPoint &point)
 {
-	SimpleVertex result;
 	D3DXVECTOR3 vector3;
 	vector3.x = point.x() / (float)width() * 2 - 1;
-	vector3.y = -(point.y() / (float)height() * 2 - 1); // reverse
+	vector3.y = -(point.y() / (float)height() * 2 - 1);
 	vector3.z = 0.5f;
-	result.Pos = vector3;
-	return result;
+	return vector3;
 }
 
-QPoint DxWidget::toQPoint(const SimpleVertex &vertex)
+// convert point within [-1, 1] to QPoint
+QPoint DxWidget::ToQPoint(const D3DXVECTOR3 &vertex)
 {
 	QPoint result;
-	result.setX((vertex.Pos.x + 1)/2 * width());
-	result.setY((-vertex.Pos.y + 1)/2 * height());
+	result.setX((vertex.x + 1)/2 * width());
+	result.setY((-vertex.y + 1)/2 * height());
 	return result;
 }
 

@@ -73,13 +73,14 @@
     <CustomBuild Include="dxwidget.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="GeneratedFiles\ui_testqt.h">
+    <CustomBuild Include="testqt.fx" />
+    <CustomBuild Include="GeneratedFiles\ui_testqt.h">
       <Filter>Generated Files</Filter>
-    </ClInclude>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <None Include="testqt.fx" />
+    <ClInclude Include="E:\资料\KEPublic2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

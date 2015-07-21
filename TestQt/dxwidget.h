@@ -1,40 +1,43 @@
+///////////////////////////////////////////////////////////////
+// Copyright(c) Kingsoft
+// 
+// FileName : dxwidget.h
+// Creator  : Miao Kaixiang
+// Date     : 2015-7-17 15:00:00
+// Comment  : Declaration of DirectX Widget
+//
+///////////////////////////////////////////////////////////////
+
 #ifndef DXWIDGET_H
 #define DXWIDGET_H
 
 #include "ui_testqt.h"
 #include "testqt.h"
-#include <qwidget.h>
+#include <QWidget>
 #include <d3d10.h>
 #include <d3dx10.h>
 
-#define MAXLINE 100
+#define MAX_LINE 1000
 
-struct SimpleVertex
+struct SIMPLE_VERTEX
 {
     D3DXVECTOR3 Pos;
     D3DXVECTOR4 Color;
-	SimpleVertex()
-	{
-		Color.x = 0.0f;
-		Color.y = 0.0f;
-		Color.z = 0.0f;
-		Color.w = 1.0f;
-	}
-
 };
+
 class TestQt;
 class DxWidget : public QWidget
 {
 	Q_OBJECT
-	// Q_DISABLE_COPY(d3DRenderWidget)
+
 public:
-	DxWidget(QWidget *parent = 0, TestQt* mainWin = 0);
+	DxWidget(TestQt* pMainWin = 0);
 	~DxWidget();
-	
-	virtual QPaintEngine* paintEngine() const { return NULL; } // override
+	virtual QPaintEngine* paintEngine() const {return NULL;}
+
 protected:
-	virtual void resizeEvent(QResizeEvent* evt);
-	virtual void paintEvent(QPaintEvent* evt);
+	virtual void resizeEvent(QResizeEvent* event);
+	virtual void paintEvent(QPaintEvent* event);
 	virtual void mouseMoveEvent(QMouseEvent* event);
 	virtual void mousePressEvent(QMouseEvent* event);
 	virtual void mouseReleaseEvent(QMouseEvent* event);
@@ -43,29 +46,30 @@ protected:
 	void Render();
 
 private:
-	HRESULT UpdateVertexBuffer();
-	SimpleVertex toSimpleVertex(const QPoint &point);
-	QPoint toQPoint(const SimpleVertex &vertex);
-	D3D10_VIEWPORT vp;
-	D3D10_DRIVER_TYPE       g_driverType;
-	ID3D10Device*           g_pd3dDevice;
-	IDXGISwapChain*         g_pSwapChain;
-	ID3D10RenderTargetView* g_pRenderTargetView;
-	ID3D10EffectTechnique*  g_pTechnique;
-	ID3D10InputLayout*      g_pVertexLayout;
-	ID3D10Buffer*           g_pVertexBuffer;
-	ID3D10Effect*           g_pEffect;
-	DXGI_SWAP_CHAIN_DESC sd;
-	SimpleVertex vertices[MAXLINE];		
-	int mVertexCounter;
-	HRESULT hr;
+	// variables for DirectX configuration
+	D3D10_VIEWPORT			m_viewPort;
+	D3D10_DRIVER_TYPE       m_driverType;
+	ID3D10Device*           m_pd3dDevice;
+	IDXGISwapChain*         m_pSwapChain;
+	ID3D10RenderTargetView* m_pRenderTargetView;
+	ID3D10EffectTechnique*  m_pTechnique;
+	ID3D10InputLayout*      m_pVertexLayout;
+	ID3D10Buffer*           m_pVertexBuffer;
+	ID3D10Effect*           m_pEffect;
+	DXGI_SWAP_CHAIN_DESC	m_swapChainDesc;
 
 	// variables for dragging line
-	bool isDraggingLine;
-	QPoint startPoint;
-	int lineIndex;
+	bool m_bIsDraggingLine;
+	QPoint m_qStartPoint;
+	int m_nLineIndex;
 
-	TestQt* mMainWin;
+	TestQt* m_pMainWin;
+	SIMPLE_VERTEX m_vertices[MAX_LINE];		
+	int m_nVertexCounter;
+
+	HRESULT UpdateVertexBuffer();
+	D3DXVECTOR3 ToSimpleVertex(const QPoint &point);
+	QPoint ToQPoint(const D3DXVECTOR3 &vertex);
 };
 
 #endif // DXWIDGET_H

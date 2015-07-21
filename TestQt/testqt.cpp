@@ -1,73 +1,85 @@
+///////////////////////////////////////////////////////////////
+// Copyright(c) Kingsoft
+// 
+// FileName : testqt.cpp
+// Creator  : Miao Kaixiang
+// Date     : 2015-7-17 15:00:00
+// Comment  : Implementation of QtMainWindow
+//
+///////////////////////////////////////////////////////////////
+
 #include "testqt.h"
-#include "qdebug.h"
-#include "qdatetime.h"
-#include "qlayout.h"
+#include "KEPublic2.h"
 #include <QtWidgets\QDialog>
+#include <QLayout>
 #include <QMouseEvent>
 
 using namespace std;
 
-//#pragma comment ( lib, "D3D11.lib")
-
-TestQt::TestQt(QWidget *parent)
-	: QMainWindow(parent),
-	ui(new Ui::TestQtClass)
+TestQt::TestQt(QWidget *parent): QMainWindow(parent)
 {
-	ui->setupUi(this);
-	dxWidget = new DxWidget(0, this);
-	//dxWidget->show();
+	m_bIsDrawLineTriggered = false;
+	m_bIsChooseTriggered = false;
+}
+
+HRESULT TestQt::Init()
+{
+	HRESULT hResult = E_FAIL;
+
+	m_ui = new Ui::TestQtClass;
+	KE_PROCESS_ERROR(m_ui);
+
+	m_ui->setupUi(this);
+
+	m_dxWidget = new DxWidget(this);
+	KE_PROCESS_ERROR(m_dxWidget);
+
 	QHBoxLayout* layout = new QHBoxLayout;
-	layout->addWidget(dxWidget);
-	ui->centralWidget->setLayout(layout);
-	//dxWidget->show();
-	connect(ui->drawLine,SIGNAL(triggered()),
-		this, SLOT(drawLineTriggered()));
-	connect(ui->choose,SIGNAL(triggered()),
-		this, SLOT(chooseTriggered()));
-	triggerId = -1;
-	isDrawLineTriggered = false;
-	isChooseTriggered = false;
+	KE_PROCESS_ERROR(layout);
+
+	layout->addWidget(m_dxWidget);
+	m_ui->centralWidget->setLayout(layout);
+	connect(m_ui->drawLine,SIGNAL(triggered()), this, SLOT(DrawLineTriggered()));
+	connect(m_ui->choose,SIGNAL(triggered()), this, SLOT(ChooseTriggered()));
+
+	hResult = S_OK;
+Exit0:
+	return hResult;
 }
 
 TestQt::~TestQt()
 {
-	delete dxWidget;
+	delete m_dxWidget;
 }
 
-void TestQt::drawLineTriggered()
+void TestQt::DrawLineTriggered()
 {
-	if (isDrawLineTriggered)
+	if (m_bIsDrawLineTriggered)
 	{
-		triggerId = -1;
-		isDrawLineTriggered = false;
+		m_bIsDrawLineTriggered = false;
 	}
 	else
 	{
-		triggerId = 0;
-		isDrawLineTriggered = true;
+		m_bIsDrawLineTriggered = true;
 
 		// set others unchecked
-		ui->choose->setChecked(false);
-		isChooseTriggered = false;
+		m_ui->choose->setChecked(false);
+		m_bIsChooseTriggered = false;
 	}
-
 }
 
-void TestQt::chooseTriggered()
+void TestQt::ChooseTriggered()
 {
-	if (isChooseTriggered)
+	if (m_bIsChooseTriggered)
 	{
-		triggerId = -1;
-		isChooseTriggered = false;
+		m_bIsChooseTriggered = false;
 	}
 	else
 	{
-		triggerId = 1;
-		isChooseTriggered = true;
+		m_bIsChooseTriggered = true;
 
 		// set others unchecked
-		ui->drawLine->setChecked(false);
-		isDrawLineTriggered = false;
+		m_ui->drawLine->setChecked(false);
+		m_bIsDrawLineTriggered = false;
 	}
-
 }
