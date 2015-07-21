@@ -79,7 +79,7 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="E:\资料\KEPublic2.h">
+    <ClInclude Include="KEPublic2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

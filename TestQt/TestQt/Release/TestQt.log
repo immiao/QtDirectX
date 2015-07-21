@@ -1,0 +1,8 @@
+﻿生成启动时间为 2015/7/21 14:07:19。
+     1>项目“D:\VisualStudioWorkSpace\TestQt\TestQt\TestQt.vcxproj”在节点 2 上(Clean 个目标)。
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V110\Microsoft.CppClean.targets(75,5): warning : 文件“D:\VISUALSTUDIOWORKSPACE\TESTQT\TESTQT\GENERATEDFILES\UI_TESTQT.H”正由另一进程使用，因此该进程无法访问此文件。
+     1>已完成生成项目“D:\VisualStudioWorkSpace\TestQt\TestQt\TestQt.vcxproj”(Clean 个目标)的操作。
+
+生成成功。
+
+已用时间 00:00:00.03
