@@ -11,7 +11,6 @@
 #include "testqt.h"
 #include "KEPublic2.h"
 #include <QtWidgets\QDialog>
-#include <QLayout>
 #include <QMouseEvent>
 
 using namespace std;
@@ -24,7 +23,8 @@ TestQt::TestQt(QWidget *parent): QMainWindow(parent)
 
 HRESULT TestQt::Init()
 {
-	HRESULT hResult = E_FAIL;
+	HRESULT hrResult	= E_FAIL;
+	HRESULT hrRetCode	= E_FAIL;
 
 	m_ui = new Ui::TestQtClass;
 	KE_PROCESS_ERROR(m_ui);
@@ -33,25 +33,25 @@ HRESULT TestQt::Init()
 
 	m_dxWidget = new DxWidget();
 	KE_PROCESS_ERROR(m_dxWidget);
-	hResult = m_dxWidget->Init(this);
-	KE_COM_PROCESS_ERROR(hResult);
+	hrRetCode = m_dxWidget->Init(this);
+	KE_COM_PROCESS_ERROR(hrRetCode);
 
-	QHBoxLayout* layout = new QHBoxLayout;
+	layout = new QHBoxLayout;
 	KE_PROCESS_ERROR(layout);
-
 	layout->addWidget(m_dxWidget);
 	m_ui->centralWidget->setLayout(layout);
-	connect(m_ui->drawLine,SIGNAL(triggered()), this, SLOT(DrawLineTriggered()));
-	connect(m_ui->choose,SIGNAL(triggered()), this, SLOT(ChooseTriggered()));
 
-	hResult = S_OK;
+	connect(m_ui->drawLine, SIGNAL(triggered()), this, SLOT(DrawLineTriggered()));
+	connect(m_ui->choose, SIGNAL(triggered()), this, SLOT(ChooseTriggered()));
+
+	hrResult = S_OK;
 Exit0:
-	return hResult;
+	return hrResult;
 }
 
 TestQt::~TestQt()
 {
-	delete m_dxWidget;
+	
 }
 
 void TestQt::DrawLineTriggered()
@@ -85,3 +85,25 @@ void TestQt::ChooseTriggered()
 		m_bIsDrawLineTriggered = false;
 	}
 }
+
+HRESULT TestQt::UnInit()
+{
+	SAFE_DELETE(m_ui);
+	m_dxWidget->UnInit();
+	SAFE_DELETE(m_dxWidget);
+	SAFE_DELETE(layout);
+
+	return S_OK;
+}
+
+bool TestQt::GetIsChooseTriggered()
+{
+	return m_bIsChooseTriggered;
+}
+
+bool TestQt::GetIsDrawLineTriggered()
+{
+	return m_bIsDrawLineTriggered;
+}
+
+

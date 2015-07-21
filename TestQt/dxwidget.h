@@ -35,6 +35,7 @@ public:
 	~DxWidget();
 	virtual QPaintEngine* paintEngine() const {return NULL;}
 	HRESULT Init(TestQt* mainWin);
+	HRESULT UnInit();
 
 protected:
 	virtual void resizeEvent(QResizeEvent* event);
@@ -42,13 +43,13 @@ protected:
 	virtual void mouseMoveEvent(QMouseEvent* event);
 	virtual void mousePressEvent(QMouseEvent* event);
 	virtual void mouseReleaseEvent(QMouseEvent* event);
-	void CleanupDevice();
 	HRESULT InitDevice();
-	void Render();
+	HRESULT Render();
 
 private:
 	// variables for DirectX configuration
 	D3D10_VIEWPORT			m_viewPort;
+	DXGI_SWAP_CHAIN_DESC	m_swapChainDesc;
 	D3D10_DRIVER_TYPE       m_driverType;
 	ID3D10Device*           m_pd3dDevice;
 	IDXGISwapChain*         m_pSwapChain;
@@ -57,8 +58,7 @@ private:
 	ID3D10InputLayout*      m_pVertexLayout;
 	ID3D10Buffer*           m_pVertexBuffer;
 	ID3D10Effect*           m_pEffect;
-	DXGI_SWAP_CHAIN_DESC	m_swapChainDesc;
-
+	
 	// variables for dragging line
 	bool m_bIsDraggingLine;
 	QPoint m_qStartPoint;

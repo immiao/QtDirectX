@@ -14,6 +14,7 @@
 #include <QTimer>
 #include <QDialog>
 #include <QLabel>
+#include <QDebug>
 
 DxWidget::DxWidget()
 {
@@ -26,33 +27,9 @@ DxWidget::DxWidget()
 
 HRESULT DxWidget::Init(TestQt* mainWin)
 {
-	HRESULT hResult = E_FAIL;
-	m_pMainWin = mainWin;
-	KE_PROCESS_ERROR(m_pMainWin);
+	HRESULT hrResult = E_FAIL;
+	HRESULT hrRetCode = E_FAIL;
 
-	hResult = InitDevice();
-	KE_COM_PROCESS_ERROR(hResult);
-
-	QTimer *timer = new QTimer(this);
-	KE_PROCESS_ERROR(timer);
-	connect(timer, SIGNAL(timeout()), this, SLOT(update()));
-	timer->start(20);
-
-	hResult = S_OK;
-Exit0:
-	return hResult;
-}
-
-DxWidget::~DxWidget()
-{
-	CleanupDevice();
-}
-
-// Create Direct3D device and swap chain
-HRESULT DxWidget::InitDevice()
-{
-	HRESULT hResult = E_FAIL;
-	m_driverType = D3D10_DRIVER_TYPE_NULL;
 	m_pd3dDevice = NULL;
 	m_pSwapChain = NULL;
 	m_pRenderTargetView = NULL;
@@ -60,6 +37,34 @@ HRESULT DxWidget::InitDevice()
 	m_pVertexLayout = NULL;
 	m_pVertexBuffer = NULL;
 	m_pEffect = NULL;
+	m_pMainWin = mainWin;
+	KE_PROCESS_ERROR(m_pMainWin);
+
+	hrRetCode = InitDevice();
+	KE_COM_PROCESS_ERROR(hrRetCode);
+
+	QTimer *timer = new QTimer(this);
+	KE_PROCESS_ERROR(timer);
+	connect(timer, SIGNAL(timeout()), this, SLOT(update()));
+	timer->start(20);
+
+	hrResult = S_OK;
+Exit0:
+	return hrResult;
+}
+
+DxWidget::~DxWidget()
+{
+	
+}
+
+// Create Direct3D device and swap chain
+HRESULT DxWidget::InitDevice()
+{
+	HRESULT hrResult = E_FAIL;
+	HRESULT hrRetCode = E_FAIL;
+
+	m_driverType = D3D10_DRIVER_TYPE_NULL;
 
     UINT createDeviceFlags = 0;
 
@@ -86,25 +91,25 @@ HRESULT DxWidget::InitDevice()
     for(UINT driverTypeIndex = 0; driverTypeIndex < numDriverTypes; driverTypeIndex++)
     {
         m_driverType = driverTypes[driverTypeIndex];
-        hResult = D3D10CreateDeviceAndSwapChain(NULL, m_driverType, NULL, createDeviceFlags,
+        hrRetCode = D3D10CreateDeviceAndSwapChain(NULL, m_driverType, NULL, createDeviceFlags,
 			D3D10_SDK_VERSION, &m_swapChainDesc, &m_pSwapChain, &m_pd3dDevice);
 
-        if(SUCCEEDED(hResult))
+        if(SUCCEEDED(hrRetCode))
             break;
     }
-	KE_COM_PROCESS_ERROR(hResult);
+	KE_COM_PROCESS_ERROR(hrRetCode);
 	KE_PROCESS_ERROR(m_pSwapChain);
 	KE_PROCESS_ERROR(m_pd3dDevice);
 
     // Create a render target view
     ID3D10Texture2D* pBackBuffer;
-    hResult = m_pSwapChain->GetBuffer(0, __uuidof( ID3D10Texture2D ), ( LPVOID* )&pBackBuffer);
-	KE_COM_PROCESS_ERROR(hResult);
+    hrRetCode = m_pSwapChain->GetBuffer(0, __uuidof( ID3D10Texture2D ), ( LPVOID* )&pBackBuffer);
+	KE_COM_PROCESS_ERROR(hrRetCode);
 	KE_PROCESS_ERROR(pBackBuffer);
 
-    hResult = m_pd3dDevice->CreateRenderTargetView(pBackBuffer, NULL, &m_pRenderTargetView);
+    hrRetCode = m_pd3dDevice->CreateRenderTargetView(pBackBuffer, NULL, &m_pRenderTargetView);
     pBackBuffer->Release();
-	KE_COM_PROCESS_ERROR(hResult);
+	KE_COM_PROCESS_ERROR(hrRetCode);
 	KE_PROCESS_ERROR(m_pRenderTargetView);
 	
     m_pd3dDevice->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
@@ -121,9 +126,9 @@ HRESULT DxWidget::InitDevice()
 	 // Create the effect
     DWORD dwShaderFlags = D3D10_SHADER_ENABLE_STRICTNESS;
 
-    hResult = D3DX10CreateEffectFromFile(L"testqt.fx", NULL, NULL, "fx_4_0", dwShaderFlags, 0,
+    hrRetCode = D3DX10CreateEffectFromFile(L"testqt.fx", NULL, NULL, "fx_4_0", dwShaderFlags, 0,
 		m_pd3dDevice, NULL, NULL, &m_pEffect, NULL, NULL );
-	KE_COM_PROCESS_ERROR(hResult);
+	KE_COM_PROCESS_ERROR(hrRetCode);
 	KE_PROCESS_ERROR(m_pEffect);
 
     // Obtain the technique
@@ -140,9 +145,9 @@ HRESULT DxWidget::InitDevice()
     // Create the input layout
     D3D10_PASS_DESC PassDesc;
     m_pTechnique->GetPassByIndex(0)->GetDesc(&PassDesc);
-    hResult = m_pd3dDevice->CreateInputLayout(layout, numElements, PassDesc.pIAInputSignature,
-		PassDesc.IAInputSignatureSize, &m_pVertexLayout );
-    KE_COM_PROCESS_ERROR(hResult);
+    hrRetCode = m_pd3dDevice->CreateInputLayout(layout, numElements, PassDesc.pIAInputSignature,
+		PassDesc.IAInputSignatureSize, &m_pVertexLayout);
+    KE_COM_PROCESS_ERROR(hrRetCode);
 	KE_PROCESS_ERROR(m_pVertexLayout);
 
     // Set the input layout
@@ -150,14 +155,15 @@ HRESULT DxWidget::InitDevice()
 	// Set primitive topology
     m_pd3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
 
-	hResult = S_OK;
+	hrResult = S_OK;
 Exit0:
-	return hResult;
+	return hrResult;
 }
 
 HRESULT DxWidget::UpdateVertexBuffer()
 {
-	HRESULT hResult = E_FAIL;
+	HRESULT hrResult = E_FAIL;
+	HRESULT hrRetCode = E_FAIL;
     D3D10_BUFFER_DESC bd;
     bd.Usage = D3D10_USAGE_DEFAULT;
     bd.ByteWidth = sizeof(SIMPLE_VERTEX) * m_nVertexCounter;
@@ -166,8 +172,8 @@ HRESULT DxWidget::UpdateVertexBuffer()
     bd.MiscFlags = 0;
     D3D10_SUBRESOURCE_DATA InitData;
     InitData.pSysMem = m_vertices;
-    hResult = m_pd3dDevice->CreateBuffer(&bd, &InitData, &m_pVertexBuffer);
-	KE_COM_PROCESS_ERROR(hResult);
+    hrRetCode = m_pd3dDevice->CreateBuffer(&bd, &InitData, &m_pVertexBuffer);
+	KE_COM_PROCESS_ERROR(hrRetCode);
 	KE_PROCESS_ERROR(m_pVertexBuffer);
 
     // Set vertex buffer
@@ -175,24 +181,37 @@ HRESULT DxWidget::UpdateVertexBuffer()
     UINT offset = 0;
     m_pd3dDevice->IASetVertexBuffers(0, 1, &m_pVertexBuffer, &stride, &offset);
 
-	hResult = S_OK;
+	hrResult = S_OK;
 Exit0:
-	return hResult;
+	return hrResult;
 }
 
 // Render the frame
-void DxWidget::Render()
+HRESULT DxWidget::Render()
 {
+	HRESULT hrResult = E_FAIL;
+	HRESULT hrRetCode = E_FAIL;
+
     float ClearColor[4] = {1.0f, 1.0f, 1.0f, 1.0f};
     m_pd3dDevice->ClearRenderTargetView(m_pRenderTargetView, ClearColor);
     D3D10_TECHNIQUE_DESC techDesc;
-    m_pTechnique->GetDesc(&techDesc);
+    hrRetCode = m_pTechnique->GetDesc(&techDesc);
+	KE_COM_PROCESS_ERROR(hrRetCode);
     for(UINT p = 0; p < techDesc.Passes; ++p)
     {
-        m_pTechnique->GetPassByIndex(p)->Apply(0);
+		ID3D10EffectPass* effectPass = m_pTechnique->GetPassByIndex(p);
+		KE_PROCESS_ERROR(effectPass);
+        hrRetCode = effectPass->Apply(0);
+		KE_COM_PROCESS_ERROR(hrRetCode);
+
         m_pd3dDevice->Draw(m_nVertexCounter, 0);
     }
-    m_pSwapChain->Present(0, 0);
+    hrRetCode = m_pSwapChain->Present(0, 0);
+	KE_COM_PROCESS_ERROR(hrRetCode);
+
+	hrResult = S_OK;
+Exit0:
+	return hrResult;
 }
 
 void DxWidget::resizeEvent(QResizeEvent* event)
@@ -200,7 +219,7 @@ void DxWidget::resizeEvent(QResizeEvent* event)
 	if (m_nVertexCounter != 0)
 	{
 		UpdateVertexBuffer();
-		Render();
+		Render(); // return HRESULT
 	}
 }
 
@@ -209,17 +228,17 @@ void DxWidget::paintEvent(QPaintEvent* event)
 	if (m_nVertexCounter != 0)
 	{
 		UpdateVertexBuffer();
-		Render();
+		Render(); // return HRESULT
 	}
 }
 
 void DxWidget::mouseMoveEvent(QMouseEvent* event)
 {
-	if (m_pMainWin->m_bIsDrawLineTriggered)
+	if (m_pMainWin->GetIsDrawLineTriggered())
 	{
 		m_vertices[m_nVertexCounter - 1].Pos = ToSimpleVertex(event->pos());
 	}
-	else if (m_pMainWin->m_bIsChooseTriggered && m_bIsDraggingLine)
+	else if (m_pMainWin->GetIsChooseTriggered() && m_bIsDraggingLine)
 	{
 		m_vertices[m_nLineIndex].Pos.x += (event->pos().x() - m_qStartPoint.x()) / (float)width() * 2;
 		m_vertices[m_nLineIndex].Pos.y += -(event->pos().y() - m_qStartPoint.y()) / (float)height() * 2;
@@ -231,7 +250,7 @@ void DxWidget::mouseMoveEvent(QMouseEvent* event)
 
 void DxWidget::mousePressEvent(QMouseEvent* event)
 {
-	if (m_pMainWin->m_bIsDrawLineTriggered)
+	if (m_pMainWin->GetIsDrawLineTriggered())
 	{
 		m_vertices[m_nVertexCounter].Pos = ToSimpleVertex(event->pos());
 		m_vertices[m_nVertexCounter].Color.x = 0.0f;
@@ -245,7 +264,7 @@ void DxWidget::mousePressEvent(QMouseEvent* event)
 		m_vertices[m_nVertexCounter + 1].Color.w = 1.0f;
 		m_nVertexCounter += 2;
 	}
-	else if (m_pMainWin->m_bIsChooseTriggered)
+	else if (m_pMainWin->GetIsChooseTriggered())
 	{
 		for (int i = 0; i < m_nVertexCounter; i++)
 		{
@@ -302,26 +321,14 @@ void DxWidget::mousePressEvent(QMouseEvent* event)
 
 void DxWidget::mouseReleaseEvent(QMouseEvent* event)
 {
-	if (m_pMainWin->m_bIsDrawLineTriggered)
+	if (m_pMainWin->GetIsDrawLineTriggered())
 	{
 		m_vertices[m_nVertexCounter].Pos = ToSimpleVertex(event->pos());
 	}
-	else if (m_pMainWin->m_bIsChooseTriggered)
+	else if (m_pMainWin->GetIsChooseTriggered())
 	{
 		m_bIsDraggingLine = false;
 	}
-}
-
-// Release the device
-void DxWidget::CleanupDevice()
-{
-    if( m_pd3dDevice ) m_pd3dDevice->ClearState();
-    if( m_pVertexBuffer ) m_pVertexBuffer->Release();
-    if( m_pVertexLayout ) m_pVertexLayout->Release();
-    if( m_pEffect ) m_pEffect->Release();
-    if( m_pRenderTargetView ) m_pRenderTargetView->Release();
-    if( m_pSwapChain ) m_pSwapChain->Release();
-    if( m_pd3dDevice ) m_pd3dDevice->Release();
 }
 
 // convert QPoint to the range in [-1, 1]
@@ -338,8 +345,25 @@ D3DXVECTOR3 DxWidget::ToSimpleVertex(const QPoint &point)
 QPoint DxWidget::ToQPoint(const D3DXVECTOR3 &vertex)
 {
 	QPoint result;
-	result.setX((vertex.x + 1)/2 * width());
-	result.setY((-vertex.y + 1)/2 * height());
+	result.setX((vertex.x + 1) / 2 * width());
+	result.setY((-vertex.y + 1) / 2 * height());
 	return result;
+}
+
+HRESULT DxWidget::UnInit()
+{
+    if (m_pd3dDevice)
+	{
+		m_pd3dDevice->ClearState();
+	}
+
+	SAFE_RELEASE(m_pVertexBuffer);
+	SAFE_RELEASE(m_pVertexLayout);
+	SAFE_RELEASE(m_pEffect);
+	SAFE_RELEASE(m_pRenderTargetView);
+	SAFE_RELEASE(m_pSwapChain);
+	SAFE_RELEASE(m_pd3dDevice);
+
+	return S_OK;
 }
 

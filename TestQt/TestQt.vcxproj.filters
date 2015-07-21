@@ -24,12 +24,12 @@
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
     <Filter Include="Generated Files\Debug">
-      <UniqueIdentifier>{ff2b79ab-4002-4df8-b38e-7a27d4d3f193}</UniqueIdentifier>
+      <UniqueIdentifier>{97f0ede7-a68f-45df-ae7f-7505e4360869}</UniqueIdentifier>
       <Extensions>cpp;moc</Extensions>
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
     <Filter Include="Generated Files\Release">
-      <UniqueIdentifier>{ab79e36e-99e1-488a-9563-912aaff48732}</UniqueIdentifier>
+      <UniqueIdentifier>{8412d381-8dd4-45f3-88c0-25dab01794c4}</UniqueIdentifier>
       <Extensions>cpp;moc</Extensions>
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
@@ -50,14 +50,14 @@
     <ClCompile Include="GeneratedFiles\qrc_testqt.cpp">
       <Filter>Generated Files</Filter>
     </ClCompile>
+    <ClCompile Include="dxwidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="GeneratedFiles\Debug\moc_dxwidget.cpp">
       <Filter>Generated Files\Debug</Filter>
     </ClCompile>
     <ClCompile Include="GeneratedFiles\Release\moc_dxwidget.cpp">
       <Filter>Generated Files\Release</Filter>
-    </ClCompile>
-    <ClCompile Include="dxwidget.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -73,12 +73,11 @@
     <CustomBuild Include="dxwidget.h">
       <Filter>Header Files</Filter>
     </CustomBuild>
-    <CustomBuild Include="testqt.fx" />
-    <CustomBuild Include="GeneratedFiles\ui_testqt.h">
-      <Filter>Generated Files</Filter>
-    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GeneratedFiles\ui_testqt.h">
+      <Filter>Generated Files</Filter>
+    </ClInclude>
     <ClInclude Include="KEPublic2.h">
       <Filter>Header Files</Filter>
     </ClInclude>

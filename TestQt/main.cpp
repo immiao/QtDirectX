@@ -15,16 +15,13 @@
 #include <QWidget>
 #include <QtWidgets/QApplication>
 
-HRESULT main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
-	HRESULT hResult = E_FAIL;
 	QApplication a(argc, argv);
 	TestQt w;
-	hResult = w.Init();
-	KE_COM_PROCESS_ERROR(hResult);
+	w.Init();
 	w.show();
-
-	hResult = (HRESULT)a.exec();
-Exit0:
-	return hResult;
+	int result = a.exec();
+	w.UnInit();
+	return result;
 }

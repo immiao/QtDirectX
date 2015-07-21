@@ -14,6 +14,7 @@
 #include "ui_testqt.h"
 #include "dxwidget.h"
 #include <QtWidgets/QMainWindow>
+#include <QLayout>
 #include <QWidget>
 #include <d3d10.h>
 #include <d3dx10.h>
@@ -27,12 +28,16 @@ public:
 	TestQt(QWidget *parent = 0);
 	~TestQt();
 	HRESULT Init();
-	bool m_bIsDrawLineTriggered;
-	bool m_bIsChooseTriggered;
+	HRESULT UnInit();
+	bool GetIsDrawLineTriggered();
+	bool GetIsChooseTriggered();
 
 private:
 	Ui::TestQtClass* m_ui;
 	DxWidget* m_dxWidget;
+	QHBoxLayout* layout;
+	bool m_bIsDrawLineTriggered;
+	bool m_bIsChooseTriggered;
 
 public slots:
 	void DrawLineTriggered();
