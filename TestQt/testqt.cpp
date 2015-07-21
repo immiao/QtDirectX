@@ -33,7 +33,8 @@ HRESULT TestQt::Init()
 
 	m_dxWidget = new DxWidget();
 	KE_PROCESS_ERROR(m_dxWidget);
-	m_dxWidget->Init(this);
+	hResult = m_dxWidget->Init(this);
+	KE_COM_PROCESS_ERROR(hResult);
 
 	QHBoxLayout* layout = new QHBoxLayout;
 	KE_PROCESS_ERROR(layout);
