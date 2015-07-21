@@ -31,8 +31,9 @@ HRESULT TestQt::Init()
 
 	m_ui->setupUi(this);
 
-	m_dxWidget = new DxWidget(this);
+	m_dxWidget = new DxWidget();
 	KE_PROCESS_ERROR(m_dxWidget);
+	m_dxWidget->Init(this);
 
 	QHBoxLayout* layout = new QHBoxLayout;
 	KE_PROCESS_ERROR(layout);

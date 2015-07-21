@@ -31,9 +31,10 @@ class DxWidget : public QWidget
 	Q_OBJECT
 
 public:
-	DxWidget(TestQt* pMainWin = 0);
+	DxWidget();
 	~DxWidget();
 	virtual QPaintEngine* paintEngine() const {return NULL;}
+	HRESULT Init(TestQt* mainWin);
 
 protected:
 	virtual void resizeEvent(QResizeEvent* event);

@@ -15,20 +15,32 @@
 #include <QDialog>
 #include <QLabel>
 
-DxWidget::DxWidget(TestQt* mainWin)
+DxWidget::DxWidget()
 {
 	setAttribute(Qt::WA_PaintOnScreen, true);
 	setAttribute(Qt::WA_NativeWindow, true);
 
-	InitDevice();
-
 	m_nVertexCounter = 0;
-	m_pMainWin = mainWin;
 	m_bIsDraggingLine = false;
+}
+
+HRESULT DxWidget::Init(TestQt* mainWin)
+{
+	HRESULT hResult = E_FAIL;
+	m_pMainWin = mainWin;
+	KE_PROCESS_ERROR(m_pMainWin);
+
+	hResult = InitDevice();
+	KE_COM_PROCESS_ERROR(hResult);
 
 	QTimer *timer = new QTimer(this);
+	KE_PROCESS_ERROR(timer);
 	connect(timer, SIGNAL(timeout()), this, SLOT(update()));
 	timer->start(20);
+
+	hResult = S_OK;
+Exit0:
+	return hResult;
 }
 
 DxWidget::~DxWidget()
@@ -183,7 +195,7 @@ void DxWidget::Render()
     m_pSwapChain->Present(0, 0);
 }
 
-void DxWidget::resizeEvent(QResizeEvent* evt)
+void DxWidget::resizeEvent(QResizeEvent* event)
 {
 	if (m_nVertexCounter != 0)
 	{
@@ -192,7 +204,7 @@ void DxWidget::resizeEvent(QResizeEvent* evt)
 	}
 }
 
-void DxWidget::paintEvent(QPaintEvent* evt)
+void DxWidget::paintEvent(QPaintEvent* event)
 {
 	if (m_nVertexCounter != 0)
 	{
